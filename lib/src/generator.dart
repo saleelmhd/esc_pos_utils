@@ -244,7 +244,7 @@ class Generator {
     _codeTable = codeTable;
     if (codeTable != null) {
       bytes += Uint8List.fromList(
-        List.from(cCodeTable.codeUnits)..add(_profile.getCodePageId(codeTable)),
+        List.from(cCodeTable.codeUnits)..add(_profile.getCodePageId(codeTable)!),
       );
       _styles = _styles.copyWith(codeTable: codeTable);
     }
@@ -323,14 +323,14 @@ class Generator {
     if (styles.codeTable != null) {
       bytes += Uint8List.fromList(
         List.from(cCodeTable.codeUnits)
-          ..add(_profile.getCodePageId(styles.codeTable)),
+          ..add(_profile.getCodePageId(styles.codeTable)!),
       );
       _styles =
           _styles.copyWith(align: styles.align, codeTable: styles.codeTable);
     } else if (_codeTable != null) {
       bytes += Uint8List.fromList(
         List.from(cCodeTable.codeUnits)
-          ..add(_profile.getCodePageId(_codeTable)),
+          ..add(_profile.getCodePageId(_codeTable)!),
       );
       _styles = _styles.copyWith(align: styles.align, codeTable: _codeTable);
     }
@@ -419,7 +419,7 @@ class Generator {
 
     if (codeTable != null) {
       bytes += Uint8List.fromList(
-        List.from(cCodeTable.codeUnits)..add(_profile.getCodePageId(codeTable)),
+        List.from(cCodeTable.codeUnits)..add(_profile.getCodePageId(codeTable)!),
       );
     }
 
@@ -468,7 +468,7 @@ class Generator {
   /// Total width of columns in one row must be equal 12.
   List<int> row(List<PosColumn> cols, {bool multiLine = true}) {
     List<int> bytes = [];
-    final isSumValid = cols.fold(0, (int sum, col) => sum + col.width) == 12;
+    final isSumValid = cols.fold(0, (int sum, col) => sum + col.width!) == 12;
     if (!isSumValid) {
       throw Exception('Total columns width must be equal to 12');
     }
@@ -477,18 +477,18 @@ class Generator {
 
     for (int i = 0; i < cols.length; ++i) {
       int colInd =
-          cols.sublist(0, i).fold(0, (int sum, col) => sum + col.width);
-      double charWidth = _getCharWidth(cols[i].styles);
+          cols.sublist(0, i).fold(0, (int sum, col) => sum + col.width!);
+      double charWidth = _getCharWidth(cols[i].styles!);
       double fromPos = _colIndToPosition(colInd);
       final double toPos =
-          _colIndToPosition(colInd + cols[i].width) - spaceBetweenRows;
+          _colIndToPosition(colInd + cols[i].width!) - spaceBetweenRows;
       int maxCharactersNb = ((toPos - fromPos) / charWidth).floor();
 
-      if (!cols[i].containsChinese) {
+      if (!cols[i].containsChinese!) {
         // CASE 1: containsChinese = false
         Uint8List encodedToPrint = cols[i].textEncoded != null
             ? cols[i].textEncoded!
-            : _encode(cols[i].text);
+            : _encode(cols[i].text!);
 
         // If the col's content is too long, split it to the next row
         if (multiLine) {
@@ -512,25 +512,25 @@ class Generator {
         // end rows splitting
         bytes += _text(
           encodedToPrint,
-          styles: cols[i].styles,
+          styles: cols[i].styles!,
           colInd: colInd,
-          colWidth: cols[i].width,
+          colWidth: cols[i].width!,
         );
       } else {
         // CASE 1: containsChinese = true
         // Split text into multiple lines if it too long
         int counter = 0;
         int splitPos = 0;
-        for (int p = 0; p < cols[i].text.length; ++p) {
-          final int w = _isChinese(cols[i].text[p]) ? 2 : 1;
+        for (int p = 0; p < cols[i].text!.length; ++p) {
+          final int w = _isChinese(cols[i].text![p]) ? 2 : 1;
           if (counter + w >= maxCharactersNb) {
             break;
           }
           counter += w;
           splitPos += 1;
         }
-        String toPrintNextRow = cols[i].text.substring(splitPos);
-        String toPrint = cols[i].text.substring(0, splitPos);
+        String toPrintNextRow = cols[i].text!.substring(splitPos);
+        String toPrint = cols[i].text!.substring(0, splitPos);
 
         if (toPrintNextRow.isNotEmpty) {
           isNextRow = true;
@@ -555,9 +555,9 @@ class Generator {
         for (var j = 0; j < lexemes.length; ++j) {
           bytes += _text(
             _encode(lexemes[j], isKanji: isLexemeChinese[j]),
-            styles: cols[i].styles,
+            styles: cols[i].styles!,
             colInd: colIndex,
-            colWidth: cols[i].width,
+            colWidth: cols[i].width!,
             isKanji: isLexemeChinese[j],
           );
           // Define the absolute position only once (we print one line only)
@@ -720,8 +720,8 @@ class Generator {
     }
 
     // Print barcode
-    final header = cBarcodePrint.codeUnits + [barcode.type.value];
-    if (barcode.type.value <= 6) {
+    final header = cBarcodePrint.codeUnits + [barcode.type.value!];
+    if (barcode.type.value! <= 6) {
       // Function A
       bytes += header + barcode.data + [0];
     } else {
